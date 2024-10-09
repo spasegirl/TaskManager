@@ -4,6 +4,7 @@ import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.time.LocalDate;
+import java.util.List;
 
 public class TaskManagerUI extends JFrame {
 
@@ -16,38 +17,45 @@ public class TaskManagerUI extends JFrame {
     }
 
     private void initUI() {
-        // Create main frame
+        // main frame
         setTitle("Task Manager");
         setSize(600, 400);
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
 
-        // Create table to display tasks
+        // table to display tasks
         String[] columns = {"Task Name", "Due Date", "Priority", "Completed"};
         tableModel = new DefaultTableModel(columns, 0);
         JTable table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
 
-        // Create panel for buttons
+        //  panel for buttons
         JPanel buttonPanel = new JPanel();
         JButton addButton = new JButton("Add Task");
         JButton removeButton = new JButton("Remove Task");
         JButton completeButton = new JButton("Mark as Complete");
+        JButton sortButton = new JButton("Sort by Priority");
+        JButton filterButton = new JButton("Filter by Priority");
 
         buttonPanel.add(addButton);
         buttonPanel.add(removeButton);
         buttonPanel.add(completeButton);
+        buttonPanel.add(sortButton);
+        buttonPanel.add(filterButton);
 
-        // Add table and buttons to the frame
+        // table and buttons added to the frame
         add(scrollPane, BorderLayout.CENTER);
         add(buttonPanel, BorderLayout.SOUTH);
 
-        // Button action listeners
+        // button action listeners
         addButton.addActionListener(e -> showAddTaskDialog());
         removeButton.addActionListener(e -> removeSelectedTask(table));
         completeButton.addActionListener(e -> markTaskAsComplete(table));
+        sortButton.addActionListener(e -> sortTasks());
+        filterButton.addActionListener(e -> filterTasks());
 
-        // Load existing tasks and update the UI
+
+        // loading existing tasks and update the UI
         loadTasksToTable();
     }
 
@@ -129,6 +137,42 @@ public class TaskManagerUI extends JFrame {
         for (Task task : taskManager.getTasks()) {
             tableModel.addRow(new Object[]{
                     task.getName(), task.getDueDate(), task.getPriority(), task.isCompleted()});
+        }
+    }
+
+    private void sortTasks() {
+        // Prompt user for sorting order
+        String[] options = {"Ascending", "Descending"};
+        int choice = JOptionPane.showOptionDialog(this,
+                "Choose sorting order:", "Sort by Priority",
+                JOptionPane.DEFAULT_OPTION, JOptionPane.INFORMATION_MESSAGE,
+                null, options, options[0]);
+
+        taskManager.sortTasksByPriority(choice == 0);  // true for ascending, false for descending
+        updateTable();
+    }
+
+    private void filterTasks() {
+        String input = JOptionPane.showInputDialog(this, "Enter priority to filter:");
+        if (input != null) {
+            try {
+                int priority = Integer.parseInt(input);
+                List<Task> filteredTasks = taskManager.filterTasksByPriority(priority);
+                updateTable(filteredTasks);
+            } catch (NumberFormatException e) {
+                JOptionPane.showMessageDialog(this, "Invalid priority input.");
+            }
+        }
+    }
+    private void updateTable() {
+        tableModel.setRowCount(0);  // Clear existing rows
+        loadTasksToTable();  // Reload tasks after sorting
+    }
+
+    private void updateTable(List<Task> filteredTasks) {
+        tableModel.setRowCount(0);  // Clear existing rows
+        for (Task task : filteredTasks) {
+            tableModel.addRow(new Object[]{task.getName(), task.getDueDate(), task.getPriority(), task.isCompleted()});
         }
     }
 
