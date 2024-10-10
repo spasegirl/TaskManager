@@ -34,4 +34,11 @@ public class TaskManager {
     public void removeTask(Task task) {
         tasks.remove(task);
     }
+
+    public List<Task> getTasksByCompletionStatus(boolean completed) {
+        return tasks.stream()
+                .filter(task -> task.isCompleted() == completed)
+                .toList();
+    }
+
 }
